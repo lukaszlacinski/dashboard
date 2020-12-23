@@ -1,9 +1,263 @@
 <html>
 <head><title>Globus Endpoint Dashboard</title>
-<meta name="author" content="Lukasz Lacinski, Globus, University of Chicago"/>
-<meta http-equiv="refresh" content="0; url='aps'"/>
+<meta name="author" content="Lukasz Lacinski, Globus, University of Chicago">
+<style media="screen" type="text/css">
+body {
+    font-family: Tahoma, sans-serif;
+    font-size: 12px
+}
+table {
+    border-collapse: collapse;
+}
+th {
+    font-family: Tahoma, sans-serif;
+    padding: 4px;
+    font-size: 12px;
+    border: 1px solid #303030;
+}
+td {
+    font-family: Tahoma, sans-serif;
+    padding: 2px;
+    font-size: 12px;
+    border: 1px solid #303030;
+}
+.td {
+    font-family: Tahoma, sans-serif;
+    padding: 2px;
+    font-size: 12px;
+    text-align: right;
+}
+.sep {
+    height: 2px;
+    padding: 0;
+    background-color: #303030
+}
+.xtt {
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    font: normal 8pt sans-serif;
+    padding: 3px;
+    border: solid 1px;
+}
+.gap {
+    width: 6px;
+    height: 2px;
+    padding: 0;
+    border: none;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+
+var tables = {}
+
+class Table {
+    constructor(dataset, data) {
+        this.dataset = dataset
+        this.start = new Date(data.start)
+        this.end = new Date(data.end)
+        this.days = (this.end - this.start) / (24 * 3600 * 1000) + 1;
+        this.transfers = data.transfers
+        this.servers = [];
+        this.transfers.forEach(transfer => {
+            var i = this.servers.findIndex(x => x === transfer.source)
+            if (i === -1)
+                this.servers.push(transfer.source)
+            i = this.servers.findIndex(x => x === transfer.destination)
+            if (i === -1)
+                this.servers.push(transfer.destination)
+        });
+        this.servers.sort()
+
+        // Convert dataset string (e.g. 20_5G or 10000_1kb) to human readable string
+        this.table_title = 'Data set: ' + this.dataset.replace(/_/g, ' ');
+    }
+
+    add_header_rows() {
+        if (!this.table) {
+            $('<h3>' + this.table_title + '</h3>').appendTo('body')
+            // '<h3>Data set: ' + number + ' ' + size + ' files</h3>'
+            // Create the table
+            this.table = $('<table>', {
+                id: 'table_' + this.dataset,
+                cellspacing: '0',
+                cellpadding: '0',
+                border: "0"
+            }).appendTo('body')
+            $('<br/>').appendTo('body')
+
+            // Create the first head row
+            var row = '<tr><td colspan="2" align="center" style="padding: 1px"><input type="button" value="Dest centric" id="' + this.dataset + '" onclick="resort_table(this)"></input></td><td class="gap"></td><th colspan="' + this.days + '">Effective Transfer Rate</th></tr>'
+            this.table.append(row)
+
+            // Create the second head row
+            row = '<tr><td align="center"><b>From</b></td><td align="center"><b>To</b></td><td class="gap"></td>'
+            var date = new Date(this.start)
+            for (var i = 0; i < this.days; ++i) {
+                if (i % 2 === 0)
+                    row += '<td align="center" bgcolor="#dddddd">' + (date.getUTCMonth() + 1) + '/' + date.getUTCDate() + '</td>'
+                else
+                    row += '<td align="center">' + (date.getUTCMonth() + 1) + '/' + date.getUTCDate() + '</td>'
+                date.setUTCDate(date.getUTCDate() + 1)
+            }
+            row += '</tr>'
+            this.table.append(row)
+        }
+    }
+
+    add_transfer_rows() {
+        // Create all transfer rows
+        var src_centric = $('#' + this.dataset).prop("value") === 'Dest centric' ? 1 : 0
+        for (var i = 0; i < this.servers.length; ++i) {
+            this.table.append('<tr><td colspan="2" class="sep"></td><td class="gap"></td><td colspan="' + this.days + '" class="sep"></td></tr>')
+            for (var j = 0; j < this.servers.length; ++j) {
+                var from = ''
+                var to = ''
+                if (src_centric) {
+                    from = this.servers[i]
+                    to = this.servers[j]
+                } else {
+                    from = this.servers[j]
+                    to = this.servers[i]
+                }
+                var row = '<tr>'
+                // First transfer group row
+                if (j === 0)
+                    if (src_centric)
+                        row += '<td rowspan="' + this.servers.length + '"><b>' + from + '</b></td><td>' + to + '</td>'
+                    else
+                        row += '<td>' + from + '</td><td rowspan="' + this.servers.length + '"><b>' + to + '</b></td>'
+                else
+                    row += '<td>' + this.servers[j] + '</td>'
+                row += '<td class="gap"></td>'
+                var date = new Date(this.start)
+                for (var d = 0; d < this.days; ++d) {
+                    row += '<td class="td" id="' + this.dataset + '_' + from.replace(/[^a-zA-Z]/g, '') + '_' + to.replace(/[^a-zA-Z]/g, '') + '_' + date.getUTCDate() + '"></td>'
+                    date.setUTCDate(date.getUTCDate() + 1)
+                }
+                row += '</tr>'
+                this.table.append(row)
+            }
+        }
+
+        // Insert transfer rate values to the tables cells
+        this.transfers.forEach(transfer => {
+            var date = new Date(transfer.tstamp)
+            var cell_id = '#' + this.dataset + '_' + transfer.source.replace(/[^a-zA-Z]/g, '') + '_' + transfer.destination.replace(/[^a-zA-Z]/g, '') + '_' + date.getUTCDate()
+            var cell = $(cell_id)
+            var faults = '';
+            if (transfer.faults > 0)
+                faults = '<span style="color: red">(' + transfer.faults + ')</span> '
+            if (transfer.status === 0) {
+                var rate = human_rate(transfer.rate)
+                cell.html(faults + rate)
+                if (transfer.source === transfer.destination)
+                    cell.attr('bgcolor', 'white')
+                else if (rate.endsWith("GB/s"))
+                    cell.attr('bgcolor', '#00cc00')
+                else if (rate.endsWith("MB/s"))
+                    cell.attr('bgcolor', '#99ff00')
+                else
+                    cell.attr('bgcolor', '#ffff00')
+            } else if (transfer.status === -1) {
+                cell.html(faults + 'Err')
+                cell.attr('bgcolor', '#ff5555')
+                cell.attr('align', 'center');
+                cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)");
+                cell.attr('onmouseout', 'UnTip()');
+            } else if (transfer.status === -2) {
+                cell.html('Paused')
+                cell.attr('bgcolor', '#f662d2')
+                cell.attr('align', 'center');
+                cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)");
+                cell.attr('onmouseout', 'UnTip()');
+            } else if (transfer.status === -4) {
+                cell.html('Err')
+                cell.attr('bgcolor', '#ff0080')
+                cell.attr('align', 'center');
+                cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)");
+                cell.attr('onmouseout', 'UnTip()');
+            }
+        })
+    }
+
+    resort() {
+        if ($('#' + this.dataset).prop("value") === 'Dest centric')
+            $('#' + this.dataset).prop("value", "Src centric")
+        else
+            $('#' + this.dataset).prop("value", "Dest centric")
+        this.table.find("tr:gt(1)").remove()
+        this.add_transfer_rows()
+    }
+}
+
+function human_rate(bps) {
+    var prefix = 'B/s';
+    if (bps >= 1000) {
+        prefix = 'kB/s';
+        bps /= 1000;
+        if (bps >= 1000) {
+            prefix = 'MB/s';
+            bps /= 1000;
+            if (bps >= 1000) {
+                prefix = 'GB/s';
+                bps /= 1000;
+            }
+        }
+    }
+    if (bps >= 10)
+        return bps.toFixed(0) + ' ' + prefix;
+    return bps.toFixed(1) + ' ' + prefix;
+}
+
+function resort_table(button) {
+    tables[button.id].resort()
+}
+
+function create_tables(data) {
+    datasets = data.datasets
+    datasets.forEach(function(dataset) {
+        let t = new Table(dataset, data[dataset])
+        tables[dataset] = t
+        t.add_header_rows()
+        t.add_transfer_rows()
+    })
+}
+
+function add_legend() {
+    var html = '<br/> \
+                <table border="1"> \
+                <tr></td><th>Legend</th></tr> \
+                <tr><td align="center" bgcolor="#ff5555">Transfer error</td></tr> \
+                <tr><td align="center" bgcolor="#ff0080">Globus error</td></tr> \
+                <tr><td align="center" bgcolor="#f662d2">Paused by endpoint admin</td></tr> \
+                <tr><td align="center" bgcolor="#ffffff">Loopback</td></tr> \
+                <tr><td align="right" bgcolor="#ffff00">&lt;1 MB/s</td></tr> \
+                <tr><td align="right" bgcolor="#99ff00">1 MB/s - 1 GB/s</td></tr> \
+                <tr><td align="right" bgcolor="#00cc00">&gt;1 GB/s</td></tr> \
+                <tr><td align="left" bgcolor="#ffffff"><span style="color: red">(n)</span> - number of faults if any</td></tr> \
+                </table> \
+                <p>All transfers are submitted with 1 hour deadline. If a transfer is not completed within one hour, it is assumed that the transfer failed.</p>'
+    $(html).appendTo('body')
+}
+
+$(document).ready(function() {
+    $.get("api", function(data) {
+        create_tables(data)
+        add_legend()
+    })
+    .fail(function(error) {
+        console.log(error)
+    })
+});
+</script>
 </head>
 <body>
-<p>If you are not redirected automatically, <a href="aps">click here</a>.</p>
+<script dataset="text/javascript" src="wz_tooltip.js"></script>
+<h2><a href="https://docs.globus.org/faq/transfer-sharing/#what_is_the_effective_transfer_rate_reported_by_globus">Effective transfer rate</a> between Globus endpoints</h2>
+<br>
 </body>
 </html>
