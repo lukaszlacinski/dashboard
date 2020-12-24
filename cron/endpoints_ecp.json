@@ -1,0 +1,64 @@
+{
+    "endpoints": [
+        {
+            "name": "Petrel",
+            "uuid": "e56c36e4-1063-11e6-a747-22000bf2d559",
+            "src_path": "/test/users/speedpage/src/",
+            "dst_path": "/test/users/speedpage/dst/",
+            "comment": "petrel#testbed shared endpoint"
+        },
+        {
+            "name": "OLCF DTN",
+            "uuid": "ef1a9560-7ca1-11e5-992c-22000b96db58",
+            "src_path": "/gpfs/alpine/cli115/scratch/lukasz/speedpage/src/",
+            "dst_path": "/gpfs/alpine/cli115/scratch/lukasz/speedpage/dst/"
+        },
+        {
+            "name": "ALCF Mira",
+            "uuid": "e09e65f5-6d04-11e5-ba46-22000b92c6ec",
+            "src_path": "/projects/Vendor_Support/lacinski/speedpage/src/",
+            "dst_path": "/projects/Vendor_Support/lacinski/speedpage/dst/"
+        },
+        {
+            "name": "RCC Midway",
+            "uuid": "1f4111ee-3aaf-11eb-b550-02d9497ca481",
+            "src_path": "/src/",
+            "dst_path": "/dst/"
+        }
+    ],
+    "datasets": {
+        "50_10_GB": {
+            "files": 50,
+            "bytes": 536870912000,
+            "description": "Data set: 50 10 GB"
+        },
+        "20_25_GB": {
+            "files": 20,
+            "bytes": 536870912000,
+            "description": "Data set: 20 25 GB"
+        },
+        "10_50_GB": {
+            "files": 10,
+            "bytes": 536870912000,
+            "description": "Data set: 10 50 GB"
+        },
+        "5_100_GB": {
+            "files": 50,
+            "bytes": 536870912000,
+            "description": "Data set: 5 100 GB"
+        },
+        "1_500_GB": {
+            "files": 1,
+            "bytes": 536870912000,
+            "description": "Data set: 1 500 GB"
+        },
+        "2_1000_GB": {
+            "files": 2,
+            "bytes": 1073741824000,
+            "description": "Data set: 2 1000 GB"
+        }
+    },
+    "params": {
+        "deadline": 7200
+    }
+}
