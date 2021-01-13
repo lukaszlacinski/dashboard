@@ -35,7 +35,7 @@ Create a json file that lists:
 - "dst_path" - a directory where all data sets will be transferred to
 - data sets you want to transfer between the endpoints. Name of the dataset must be the same as a name of the directory with the data set. Name of the dataset is also displayed on the dashboard page after replacing underscore characters '_' with a space.
 
-Sample configuration files: [endpoints_aps.json](), [endpoints_ecp.json]().
+Sample configuration files: [cron/endpoints_aps.json](), [cron/endpoints_ecp.json]().
 
 ### Register with Globus
 Go to https://developers.globus.org to register the cron script as a Globus app. When registering, select 'Native App' toggle button.
@@ -69,7 +69,7 @@ Install Apache and PHP packages
 ```
 # yum install httpd php php-pgsql
 ```
-Copy `api/index.php` to HTTPD server directory, `<DocumentRoot>/<endpoints_set_name>/api/`. Copy `api/dashboard.inc` with database credentials to a directory, so the file is included by `api/index.php:L11`.
+Copy [api/index.php]() to HTTPD server directory, `<DocumentRoot>/<endpoints_set_name>/api/`. Copy [api/dashboard.inc]() with database credentials to a directory, so the file is included by [api/index.php#L11]().
 
 ### Set up the dashboard web page 
-Copy `app/index.html` and `app/wz_tooltip.js` to HTTPD server directory `<DocumentRoot>/<endpoints_set_name>/`.
+Copy [app/index.html]() and [app/wz_tooltip.js]() to HTTPD server directory `<DocumentRoot>/<endpoints_set_name>/`.
