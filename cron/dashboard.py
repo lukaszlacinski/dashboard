@@ -183,9 +183,11 @@ class GlobusTransfer(Globus):
                 else:
                     message = f"The task reached a {GlobusTransfer.deadline} second deadline"
                     events = tc.task_event_list(task_id, num_results=1, filter="is_error:1")
-                    if len(events.data):
-                        event = events.data[0]
+                    try:
+                        event = next(events)
                         message += "\nThe last error event:\n{}".format(event.get("details"))
+                    except StopIteration:
+                        pass
                     status = DEADLINE
                     logger.warning("{} - faults: {}, error: {}".format(self, task.get("faults"), message))
                 tc.cancel_task(task_id)
