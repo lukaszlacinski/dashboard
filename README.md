@@ -76,5 +76,4 @@ Copy [app/index.html](app/index.html) and [app/wz_tooltip.js](app/wz_tooltip.js)
 
 ### Dashboard page
 
-After several days of collecting transfers results the dashboard page should look like
-[Dashboard page](screenshot_aps.png)
+After several days of collecting transfers results the dashboard page should look like ![Dashboard page](screenshot_aps.png)
