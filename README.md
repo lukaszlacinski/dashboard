@@ -73,3 +73,8 @@ Copy [api/index.php](api/index.php) to HTTPD server directory, `<DocumentRoot>/<
 
 ### Set up the dashboard web page 
 Copy [app/index.html](app/index.html) and [app/wz_tooltip.js](app/wz_tooltip.js) to HTTPD server directory `<DocumentRoot>/<endpoints_set_name>/`.
+
+### Dashboard page
+
+After several days of collecting transfers results the dashboard page should look like
+[Dashboard page](screenshot_aps.png)
