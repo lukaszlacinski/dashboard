@@ -17,8 +17,14 @@
         $set = prev($request_array);
     $set = prev($request_array);
 
+    date_default_timezone_set('UTC');
+    if (isset($_GET['today']) and strtotime($_GET['today']))
+        $now = "timestamp '" . $_GET['today'] . "'";
+    else
+        $now = 'now()';
+
     $response = array();
-    $query = 'SELECT distinct(dataset) FROM transfer WHERE set=\'' . $set . '\'and date(now() - interval \'10 days\') < tstamp AND tstamp < date(now())';
+    $query = 'SELECT distinct(dataset) FROM transfer WHERE set=\'' . $set . '\' and date(' . $now . ' - interval \'10 days\') < tstamp AND tstamp < date(' . $now . ')';
     $out = pg_query($query);
     $datasets = array();;
     while ($row = pg_fetch_row($out)) {
@@ -28,7 +34,7 @@
 
     foreach ($datasets as $dataset) {
         $test_data = array();
-        $query = 'SELECT source FROM transfer WHERE date(now() - interval \'10 days\') < tstamp AND tstamp < date(now()) UNION SELECT destination FROM transfer WHERE set=\'' . $set . '\' and date(now() - interval \'10 days\') < tstamp AND tstamp < date(now())';
+        $query = 'SELECT source FROM transfer WHERE date(' . $now . ' - interval \'10 days\') < tstamp AND tstamp < date(' . $now . ') UNION SELECT destination FROM transfer WHERE set=\'' . $set . '\' and date(' . $now . ' - interval \'10 days\') < tstamp AND tstamp < date(' . $now . ')';
         $out = pg_query($query);
         $endpoints = array();;
         while ($row = pg_fetch_row($out)) {
@@ -36,13 +42,13 @@
         }
         $test_data['endpoints'] = $endpoints;
 
-        $query = 'SELECT date(min(tstamp)), date(max(tstamp)) FROM transfer WHERE set=\'' . $set . '\' and dataset=\'' . $dataset . '\' AND date(now() - interval \'10 days\') < tstamp AND tstamp < date(now())';
+        $query = 'SELECT date(min(tstamp)), date(max(tstamp)) FROM transfer WHERE set=\'' . $set . '\' and dataset=\'' . $dataset . '\' AND date(' . $now . ' - interval \'10 days\') < tstamp AND tstamp < date(' . $now . ')';
         $out = pg_query($query);
         $row = pg_fetch_row($out);
         $test_data['start'] = $row[0];
         $test_data['end'] = $row[1];
 
-        $query = 'SELECT source, destination, date(tstamp), status, rate, faults, message FROM transfer WHERE set=\'' . $set . '\' and dataset=\'' . $dataset . '\' AND date(now() - interval \'10 day\') < tstamp AND tstamp<date(now()) ORDER BY source, destination, tstamp';
+        $query = 'SELECT source, destination, date(tstamp), status, rate, faults, message FROM transfer WHERE set=\'' . $set . '\' and dataset=\'' . $dataset . '\' AND date(' . $now . ' - interval \'10 day\') < tstamp AND tstamp<date(' . $now . ') ORDER BY source, destination, tstamp';
         $out = pg_query($query);
         $transfers = array();
         while ($row = pg_fetch_assoc($out)) {
