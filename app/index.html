@@ -245,8 +245,9 @@ function add_legend() {
 }
 
 $(document).ready(function() {
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
+    const queryString = window.location.search
+    const urlParams = new URLSearchParams(queryString)
+    params = ''
     if (urlParams.has("today"))
         params = "?today=" + urlParams.get("today")
     $.get("api" + params, function(data) {
