@@ -134,6 +134,21 @@ class GlobusTransfer(Globus):
         if self.source != self.destination:
             self.destination.release()
 
+    def get_error_events(self, tc, task_id):
+        events = tc.task_event_list(task_id, num_results=5, filter="is_error:1")
+        message = ""
+        try:
+            event = next(events)
+            message = "{}".format(event.get("details"))
+        except StopIteration:
+            return message
+        while True:
+            try:
+                event = next(events)
+                message += "\n---------------------------------\n{}".format(event.get("details"))
+            except StopIteration:
+                return message
+
     def run(self):
         logger.info(f"{self} - started")
         source = self.source
@@ -171,7 +186,11 @@ class GlobusTransfer(Globus):
                 rate = GlobusTransfer.convert_bps(bps)
                 logger.info(f"Globus transfer {task_id}, from {source.uuid}{src_path} to {destination.uuid}{dst_path} succeeded")
                 logger.info("{} - files transferred: {}, bytes transferred: {}, effective transfer rate: {}, faults: {}".format(self, task.get("files_transferred"), task.get("bytes_transferred"), rate, task.get("faults")))
-                t = TransferModel(uuid=task_id, set=self.set, source=source.name, destination=destination.name, dataset=self.dataset, status=SUCCEEDED, rate=bps, faults=task.get("faults"))
+                faults = task.get("faults")
+                message = None
+                if faults > 0:
+                    message = self.get_error_events(tc, task_id)
+                t = TransferModel(uuid=task_id, set=self.set, source=source.name, destination=destination.name, dataset=self.dataset, status=SUCCEEDED, rate=bps, message=message, faults=faults)
             elif task.get("status") == "ACTIVE":
                 if task.get("is_paused"):
                     pause_info = tc.task_pause_info(task_id)
@@ -181,13 +200,9 @@ class GlobusTransfer(Globus):
                     status = PAUSED
                     logger.info("{} - {}".format(self, message))
                 else:
-                    message = f"The task reached a {GlobusTransfer.deadline} second deadline"
-                    events = tc.task_event_list(task_id, num_results=1, filter="is_error:1")
-                    try:
-                        event = next(events)
-                        message += "\nThe last error event:\n{}".format(event.get("details"))
-                    except StopIteration:
-                        pass
+                    message = f"The task reached a {GlobusTransfer.deadline} second deadline\n"
+                    events = tc.task_event_list(task_id, num_results=5, filter="is_error:1")
+                    message += self.get_error_events(tc, task_id)
                     status = DEADLINE
                     logger.warning("{} - faults: {}, error: {}".format(self, task.get("faults"), message))
                 tc.cancel_task(task_id)

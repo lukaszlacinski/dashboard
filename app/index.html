@@ -59,9 +59,9 @@ class Table {
         this.dataset = dataset
         this.start = new Date(data.start)
         this.end = new Date(data.end)
-        this.days = (this.end - this.start) / (24 * 3600 * 1000) + 1;
+        this.days = (this.end - this.start) / (24 * 3600 * 1000) + 1
         this.transfers = data.transfers
-        this.servers = [];
+        this.servers = []
         this.transfers.forEach(transfer => {
             var i = this.servers.findIndex(x => x === transfer.source)
             if (i === -1)
@@ -69,11 +69,11 @@ class Table {
             i = this.servers.findIndex(x => x === transfer.destination)
             if (i === -1)
                 this.servers.push(transfer.destination)
-        });
+        })
         this.servers.sort()
 
         // Convert dataset string (e.g. 20_5G or 10000_1kb) to human readable string
-        this.table_title = 'Data set: ' + this.dataset.replace(/_/g, ' ');
+        this.table_title = 'Data set: ' + this.dataset.replace(/_/g, ' ')
     }
 
     add_header_rows() {
@@ -148,7 +148,7 @@ class Table {
             var date = new Date(transfer.tstamp)
             var cell_id = '#' + this.dataset + '_' + transfer.source.replace(/[^a-zA-Z]/g, '') + '_' + transfer.destination.replace(/[^a-zA-Z]/g, '') + '_' + date.getUTCDate()
             var cell = $(cell_id)
-            var faults = '';
+            var faults = ''
             if (transfer.faults > 0)
                 faults = '<span style="color: red">(' + transfer.faults + ')</span> '
             if (transfer.status === 0) {
@@ -162,24 +162,28 @@ class Table {
                     cell.attr('bgcolor', '#99ff00')
                 else
                     cell.attr('bgcolor', '#ffff00')
+                if (transfer.faults > 0) {
+                    cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)")
+                    cell.attr('onmouseout', 'UnTip()')
+                }
             } else if (transfer.status === -1) {
                 cell.html(faults + 'Err')
                 cell.attr('bgcolor', '#ff5555')
-                cell.attr('align', 'center');
-                cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)");
-                cell.attr('onmouseout', 'UnTip()');
+                cell.attr('align', 'center')
+                cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)")
+                cell.attr('onmouseout', 'UnTip()')
             } else if (transfer.status === -2) {
                 cell.html('Paused')
                 cell.attr('bgcolor', '#f662d2')
-                cell.attr('align', 'center');
-                cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)");
-                cell.attr('onmouseout', 'UnTip()');
+                cell.attr('align', 'center')
+                cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)")
+                cell.attr('onmouseout', 'UnTip()')
             } else if (transfer.status === -4) {
                 cell.html('Err')
                 cell.attr('bgcolor', '#ff0080')
-                cell.attr('align', 'center');
-                cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)");
-                cell.attr('onmouseout', 'UnTip()');
+                cell.attr('align', 'center')
+                cell.attr('onmouseover', "Tip('<pre>" + transfer.message + "</pre>', SHADOW, true)")
+                cell.attr('onmouseout', 'UnTip()')
             }
         })
     }
@@ -195,22 +199,22 @@ class Table {
 }
 
 function human_rate(bps) {
-    var prefix = 'B/s';
+    var prefix = 'B/s'
     if (bps >= 1000) {
-        prefix = 'kB/s';
-        bps /= 1000;
+        prefix = 'kB/s'
+        bps /= 1000
         if (bps >= 1000) {
-            prefix = 'MB/s';
-            bps /= 1000;
+            prefix = 'MB/s'
+            bps /= 1000
             if (bps >= 1000) {
-                prefix = 'GB/s';
-                bps /= 1000;
+                prefix = 'GB/s'
+                bps /= 1000
             }
         }
     }
     if (bps >= 10)
-        return bps.toFixed(0) + ' ' + prefix;
-    return bps.toFixed(1) + ' ' + prefix;
+        return bps.toFixed(0) + ' ' + prefix
+    return bps.toFixed(1) + ' ' + prefix
 }
 
 function resort_table(button) {
@@ -245,7 +249,7 @@ function add_legend() {
 }
 
 $(document).ready(function() {
-    const queryString = window.location.search
+    const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString)
     params = ''
     if (urlParams.has("today"))
@@ -257,7 +261,7 @@ $(document).ready(function() {
     .fail(function(error) {
         console.log(error)
     })
-});
+})
 </script>
 </head>
 <body>
