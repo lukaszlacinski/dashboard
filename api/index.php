@@ -3,7 +3,7 @@
     header("Content-type: application/json;charset=utf-8");
 
     function com2string($str) {
-        $str = htmlspecialchars($str);
+        $str = htmlspecialchars($str, ENT_QUOTES);
         $str = str_replace(array("\n", '\n', "\r", '\r'), array('<br>', '<br>'), $str);
         return $str;
     }
