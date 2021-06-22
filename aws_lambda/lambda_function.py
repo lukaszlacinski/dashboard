@@ -129,7 +129,7 @@ def lambda_handler(event, context):
                 summary += message + "\n"
                 if log(True, "-" + uuid):
                     send_message(message)
-            elif log(False, uuid):
+            elif log(False, "-" + uuid):
                 send_message("Dashboard Endpoint Activation test problem with S3 Bucket")
         except Exception as e:
             # send an sms notification if the service is down
